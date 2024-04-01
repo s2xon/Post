@@ -2,6 +2,7 @@ package fb
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -84,7 +85,7 @@ func APP_TKN() string{
 
 
 type Response struct {
-	Data struct {
+	DATA struct {
 		APP_ID		string		`json:"app_id"`
 		TYPE		string		`json:"type"`
 		APPLICATION string   `json:"application"`
@@ -114,7 +115,7 @@ func USER(acc_tkn string, app_tkn string) Response {
 	u.RawQuery = q.Encode()
 
 	url := u.String()
-	log.Println(url)
+	// log.Println(url)
 	
 	res, err := http.Get(url)
 	if err != nil {
@@ -132,5 +133,69 @@ func USER(acc_tkn string, app_tkn string) Response {
 	return *UserData
 }
 
+type PageResponse struct {
+    Data []struct {
+        AccessToken  string `json:"access_token"`
+        Category     string `json:"category"`
+        CategoryList []struct {
+            ID   string `json:"id"`
+            Name string `json:"name"`
+        } `json:"category_list"`
+        Name  string   `json:"name"`
+        ID    string   `json:"id"`
+        Tasks []string `json:"tasks"`
+    } `json:"data"`
+}
 
+	// {
+	// 	"data": [
+	// 	  {
+	// 		"access_token": "page_access_token",
+	// 		"category": "Internet Company",
+	// 		"category_list": [
+	// 		  {
+	// 			"id": "2256",
+	// 			"name": "Internet Company"
+	// 		  }
+	// 		],
+	// 		"name": "Name of this Page",
+	// 		"id": "page_id",
+	// 		"tasks": [
+	// 		  "ANALYZE",
+	// 		  "ADVERTISE",
+	// 		  "MODERATE",
+	// 		  "CREATE_CONTENT"
+	// 		]
+	// 	  },
+
+func PAGE_TKN(user_id string, user_tkn string) PageResponse {
+	u, err := url.Parse("https://graph.facebook.com/v19.0/user_id/accounts?access_token=user_access_token")
+	if err != nil {
+		panic(err)
+	}
+	u.Path = fmt.Sprintf("v19.0/%s/accounts", user_id)
+	q := u.Query()
+	q.Set("access_token", user_tkn)
+	u.RawQuery = q.Encode()
+
+	url := u.String()
+
+	log.Println(url)
+
+	res, err := http.Get(url)
+	if err != nil {
+		panic(err)
+	}
+
+	PageData := &PageResponse{}
+	dc := json.NewDecoder(res.Body).Decode(PageData)
+	if dc != nil {
+		panic(err)
+	}
+
+	log.Println(res.Body)
+
+	return *PageData
+
+}
 
